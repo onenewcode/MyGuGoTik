@@ -44,3 +44,5 @@
         └─logging
 
 ```
+在idl文件下执行以下命令
+protoc --proto_path=. --go_out=./../../.. --go-grpc_out=./../../.. ./*.proto

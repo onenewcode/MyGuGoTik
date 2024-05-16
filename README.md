@@ -46,3 +46,30 @@
 ```
 在idl文件下执行以下命令
 protoc --proto_path=. --go_out=./../../.. --go-grpc_out=./../../.. ./*.proto
+
+
+```shell
+├─config
+└─src
+    ├─constant
+    │  ├─config
+    │  └─strings
+    ├─idl
+    ├─models
+    ├─rpc
+    │  ├─auth
+    │  ├─chat
+    │  ├─comment
+    │  ├─favorite
+    │  ├─feed
+    │  ├─health
+    │  ├─publish
+    │  ├─recommend
+    │  ├─relation
+    │  └─user
+    ├─storage
+    │  └─database
+    └─utils
+        └─logging
+
+```

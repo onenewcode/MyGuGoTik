@@ -77,9 +77,11 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 		entry.Data["span_id"] = sCtx.SpanID().String()
 	}
 
-	if config.EnvCfg.LoggerWithTraceState == "enable" {
+	if config.EnvCfg.LoggerWithTraceState == "enable" { //判断是否开启日志追踪
 		attrs := make([]attribute.KeyValue, 0)
+		// 存储日志的严重性级别
 		logSeverityKey := attribute.Key("log.severity")
+		//存储日志消息的内容
 		logMessageKey := attribute.Key("log.message")
 		attrs = append(attrs, logSeverityKey.String(entry.Level.String()))
 		attrs = append(attrs, logMessageKey.String(entry.Message))
@@ -87,7 +89,10 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 			fields := attribute.Key(fmt.Sprintf("log.fields.%s", key))
 			attrs = append(attrs, fields.String(fmt.Sprintf("%v", value)))
 		}
+		//在当前的追踪Span中添加一个名为“log”的事件，通过trace.WithAttributes(attrs...)将前面收集的所有属性传递给这个事件。
+		//这样，日志的详细信息就会和这个追踪事件关联起来，便于在追踪结果中查看和分析
 		span.AddEvent("log", trace.WithAttributes(attrs...))
+		// 判断日志的错我是否等级太大
 		if entry.Level <= log.ErrorLevel {
 			span.SetStatus(codes.Error, entry.Message)
 		}

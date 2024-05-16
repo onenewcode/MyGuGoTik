@@ -32,11 +32,13 @@ func main() {
 	tp, err := tracing.SetTraceProvider(config.AuthRpcServerName)
 
 	if err != nil {
+		// 方法添加了一个字段到日志条目中
 		logging.Logger.WithFields(logrus.Fields{
 			"err": err,
 		}).Panicf("Error to set the trace")
 	}
 	defer func() {
+		// 等待所有追踪数据被导出完成，然后释放资源
 		if err := tp.Shutdown(context.Background()); err != nil {
 			logging.Logger.WithFields(logrus.Fields{
 				"err": err,
@@ -46,8 +48,9 @@ func main() {
 
 	// Configure Pyroscope
 	profiling.InitPyroscope("GuGoTik.AuthService")
-
+	// 添加服务字段
 	log := logging.LogService(config.AuthRpcServerName)
+	// 开启服务监听
 	lis, err := net.Listen("tcp", config.EnvCfg.PodIpAddr+config.AuthRpcServerPort)
 
 	if err != nil {
@@ -62,7 +65,7 @@ func main() {
 
 	reg := prom.Client
 	reg.MustRegister(srvMetrics)
-
+	//创建一个目标误报率为 0.1% 的新 Bloom 过滤器
 	// Create a new Bloom filter with a target false positive rate of 0.1%
 	BloomFilter = bloom.NewWithEstimates(10000000, 0.001) // assuming we have 1 million users
 
@@ -105,7 +108,7 @@ func main() {
 		grpc.ChainUnaryInterceptor(srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
 		grpc.ChainStreamInterceptor(srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
 	)
-
+	// 注册服务
 	if err := consul.RegisterConsul(config.AuthRpcServerName, config.AuthRpcServerPort); err != nil {
 		log.Panicf("Rpc %s register consul happens error for: %v", config.AuthRpcServerName, err)
 	}
@@ -117,7 +120,7 @@ func main() {
 
 	srv.New()
 	srvMetrics.InitializeMetrics(s)
-
+	// 并发地管理和协调多个任务
 	g := &run.Group{}
 	g.Add(func() error {
 		return s.Serve(lis)
@@ -126,7 +129,7 @@ func main() {
 		s.Stop()
 		log.Errorf("Rpc %s listen happens error for: %v", config.AuthRpcServerName, err)
 	})
-
+	// 创建HTTP服务器实例
 	httpSrv := &http.Server{Addr: config.EnvCfg.PodIpAddr + config.Metrics}
 	g.Add(func() error {
 		m := http.NewServeMux()

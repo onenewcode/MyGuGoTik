@@ -33,6 +33,7 @@ func (u *User) GetID() uint32 {
 }
 
 func init() {
+	// 对模型进行自动迁移
 	if err := database.Client.AutoMigrate(&User{}); err != nil {
 		panic(err)
 	}

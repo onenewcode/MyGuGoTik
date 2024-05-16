@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bits-and-blooms/bloom/v3"
+
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"

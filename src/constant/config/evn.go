@@ -1,5 +1,11 @@
 package config
 
+import (
+	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
+)
+
 var EnvCfg envConfig
 
 type envConfig struct {
@@ -47,14 +53,15 @@ type envConfig struct {
 	ElasticsearchUrl          string  `env:"ES_ADDR"`
 }
 
-//func init() {
-//	if err := godotenv.Load(); err != nil {
-//		log.Errorf("Can not read env from file system, please check the right this program owned.")
-//	}
-//
-//	EnvCfg = envConfig{}
-//
-//	if err := env.Parse(&EnvCfg); err != nil {
-//		panic("Can not parse env from file system, please check the env.")
-//	}
-//}
+// 初始化配置文件
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Errorf("Can not read env from file system, please check the right this program owned.")
+	}
+
+	EnvCfg = envConfig{}
+
+	if err := env.Parse(&EnvCfg); err != nil {
+		panic("Can not parse env from file system, please check the env.")
+	}
+}

@@ -50,20 +50,22 @@ func main() {
 	profiling.InitPyroscope("GuGoTik.AuthService")
 	// 添加服务字段
 	log := logging.LogService(config.AuthRpcServerName)
-	// 开启服务监听
+	// 开启rpc 服务监听
 	lis, err := net.Listen("tcp", config.EnvCfg.PodIpAddr+config.AuthRpcServerPort)
 
 	if err != nil {
 		log.Panicf("Rpc %s listen happens error: %v", config.AuthRpcServerName, err)
 	}
-
+	// 创建一个新的服务器监控指标收集器
 	srvMetrics := grpcprom.NewServerMetrics(
 		grpcprom.WithServerHandlingTimeHistogram(
+			// 每个bucket代表一个区间，用于累计落在该区间内的请求处理时间
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
 		),
 	)
 
 	reg := prom.Client
+	// 吧监控指标注入到 prom的服务器
 	reg.MustRegister(srvMetrics)
 	//创建一个目标误报率为 0.1% 的新 Bloom 过滤器
 	// Create a new Bloom filter with a target false positive rate of 0.1%
@@ -82,6 +84,7 @@ func main() {
 
 	// Create a go routine to receive redis message and add it to BloomFilter
 	go func() {
+		// 利用发布订阅模型上传用户数据
 		pubSub := redis.Client.Subscribe(context.Background(), config.BloomRedisChannel)
 		defer func(pubSub *redis2.PubSub) {
 			err := pubSub.Close()

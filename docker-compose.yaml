@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  rdb:
+    container_name: "GuGoTik-Extra-PostgreSQL"
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: gugodb
+      POSTGRES_USER: root
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  consul:
+    container_name: "GuGoTik-Extra-Consul"
+    image: consul:1.15.4
+    command: [
+      "agent",
+      "-dev",
+      "-client=0.0.0.0"
+    ]
+    ports:
+      - "8500:8500"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8500/v1/status/leader" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  redis:
+    container_name: "GuGoTik-Extra-Redis"
+    image: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3

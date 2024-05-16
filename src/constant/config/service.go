@@ -1,5 +1,6 @@
 package config
 
+const Host = "121.37.143.160"
 const WebServiceName = "GuGoTik-GateWay"
 const WebServiceAddr = ":37000"
 

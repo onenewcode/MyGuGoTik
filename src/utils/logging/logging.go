@@ -31,9 +31,8 @@ func init() {
 	case "TRACE":
 		log.SetLevel(log.TraceLevel)
 	}
-	// 设置文件输出路径
-	filePath := path.Join("/var", "log", "gugotik", "gugotik.log")
 
+	filePath := path.Join("/var", "log", "gugotik", "gugotik.log")
 	dir := path.Dir(filePath)
 	if err := os.MkdirAll(dir, os.FileMode(0755)); err != nil {
 		panic(err)
@@ -43,11 +42,9 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	// 设置输出格式
+
 	log.SetFormatter(&log.JSONFormatter{})
-	// 添加回调函数
 	log.AddHook(logTraceHook{})
-	// 设置多重输出，同时输出到命令行和指定文件
 	log.SetOutput(io.MultiWriter(f, os.Stdout))
 
 	Logger = log.WithFields(log.Fields{
@@ -61,7 +58,6 @@ type logTraceHook struct{}
 
 func (t logTraceHook) Levels() []log.Level { return log.AllLevels }
 
-// 用于集成OpenTelemetry的分布式追踪功能到logrus日志库中
 func (t logTraceHook) Fire(entry *log.Entry) error {
 	ctx := entry.Context
 	if ctx == nil {
@@ -69,6 +65,10 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 	}
 
 	span := trace.SpanFromContext(ctx)
+	//if !span.IsRecording() {
+	//	return nil
+	//}
+
 	sCtx := span.SpanContext()
 	if sCtx.HasTraceID() {
 		entry.Data["trace_id"] = sCtx.TraceID().String()
@@ -77,11 +77,9 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 		entry.Data["span_id"] = sCtx.SpanID().String()
 	}
 
-	if config.EnvCfg.LoggerWithTraceState == "enable" { //判断是否开启日志追踪
+	if config.EnvCfg.LoggerWithTraceState == "enable" {
 		attrs := make([]attribute.KeyValue, 0)
-		// 存储日志的严重性级别
 		logSeverityKey := attribute.Key("log.severity")
-		//存储日志消息的内容
 		logMessageKey := attribute.Key("log.message")
 		attrs = append(attrs, logSeverityKey.String(entry.Level.String()))
 		attrs = append(attrs, logMessageKey.String(entry.Message))
@@ -89,10 +87,7 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 			fields := attribute.Key(fmt.Sprintf("log.fields.%s", key))
 			attrs = append(attrs, fields.String(fmt.Sprintf("%v", value)))
 		}
-		//在当前的追踪Span中添加一个名为“log”的事件，通过trace.WithAttributes(attrs...)将前面收集的所有属性传递给这个事件。
-		//这样，日志的详细信息就会和这个追踪事件关联起来，便于在追踪结果中查看和分析
 		span.AddEvent("log", trace.WithAttributes(attrs...))
-		// 判断日志的错我是否等级太大
 		if entry.Level <= log.ErrorLevel {
 			span.SetStatus(codes.Error, entry.Message)
 		}

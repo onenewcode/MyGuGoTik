@@ -82,3 +82,20 @@ protoc --proto_path=. --go_out=./../../.. --go-grpc_out=./../../.. ./*.proto
 
 在windos安装，
 输入consul --version进行测试，最后输入consul agent -dev,访问http://localhost:8500/
+
+# 技术栈
+## consul
+用于服务发现
+## redis
+## gorm
+## grpc
+## gin
+## PostgreSQL
+## rabbitmq
+## opentelemetry
+## prometheus
+开源的监控和警报系统
+## logrus
+
+## Pyroscope
+主要用于实时可视化和分析应用程序的性能数据，帮助开发者快速识别和解决性能瓶颈

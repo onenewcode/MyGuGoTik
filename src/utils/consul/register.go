@@ -12,6 +12,7 @@ import (
 
 var consulClient *capi.Client
 
+// 初始化与consul的连接
 func init() {
 	cfg := capi.DefaultConfig()
 	cfg.Address = config.EnvCfg.ConsulAddr
@@ -23,6 +24,7 @@ func init() {
 	}
 }
 
+// 向consul注册服务
 func RegisterConsul(name string, port string) error {
 	parsedPort, err := strconv.Atoi(port[1:]) // port start with ':' which like ':37001'
 	logging.Logger.WithFields(log.Fields{

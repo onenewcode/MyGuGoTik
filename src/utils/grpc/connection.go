@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// 建立rpc客户端连接，用于向Consul建立连接，查找一个 serviceName 的服务
 func Connect(serviceName string) (conn *grpc.ClientConn) {
 	kacp := keepalive.ClientParameters{
 		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
@@ -22,9 +23,9 @@ func Connect(serviceName string) (conn *grpc.ClientConn) {
 
 	conn, err := grpc.Dial(
 		fmt.Sprintf("consul://%s/%s?wait=15s", config.EnvCfg.ConsulAddr, config.EnvCfg.ConsulAnonymityPrefix+serviceName),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(insecure.NewCredentials()), //表明使用不安全的连接方式
 		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()), // 用于跟踪 gRPC 调用的 tracing
 		grpc.WithKeepaliveParams(kacp),
 	)
 

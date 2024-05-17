@@ -41,3 +41,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  pyroscope:
+    container_name: "GuGoTik-Extra-Pyroscope"
+    image: pyroscope/pyroscope
+    command:
+      - server
+    ports:
+      - "4040:4040"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --spider -q http://localhost:4040/healthz || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3

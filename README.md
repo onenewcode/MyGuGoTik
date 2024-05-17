@@ -73,3 +73,12 @@ protoc --proto_path=. --go_out=./../../.. --go-grpc_out=./../../.. ./*.proto
         └─logging
 
 ```
+
+# 存在的问题
+## consul
+而consul是注册中心访问服务提供者健康检查url。
+
+**问题在于**：服务器无法主动与内网IP建立连接(连路由都做不到)，也就是说除非你本地主机拥有公网IP, 否则无法直接ping通。
+
+在windos安装，
+输入consul --version进行测试，最后输入consul agent -dev,访问http://localhost:8500/

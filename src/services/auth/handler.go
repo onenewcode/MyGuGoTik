@@ -12,7 +12,6 @@ import (
 	"GuGoTik/src/storage/cached"
 	"GuGoTik/src/storage/database"
 	"GuGoTik/src/storage/redis"
-	grpc2 "GuGoTik/src/utils/grpc"
 	"GuGoTik/src/utils/logging"
 	"context"
 	"crypto/md5"
@@ -44,13 +43,14 @@ type AuthServiceImpl struct {
 	auth.AuthServiceServer
 }
 
+// todo
 func (a AuthServiceImpl) New() {
-	relationConn := grpc2.Connect(config.RelationRpcServerName)
-	relationClient = relation.NewRelationServiceClient(relationConn)
-	userRpcConn := grpc2.Connect(config.UserRpcServerName)
-	userClient = user2.NewUserServiceClient(userRpcConn)
-	recommendRpcConn := grpc2.Connect(config.RecommendRpcServiceName)
-	recommendClient = recommend.NewRecommendServiceClient(recommendRpcConn)
+	//relationConn := grpc2.Connect(config.RelationRpcServerName)
+	//relationClient = relation.NewRelationServiceClient(relationConn)
+	//userRpcConn := grpc2.Connect(config.UserRpcServerName)
+	//userClient = user2.NewUserServiceClient(userRpcConn)
+	//recommendRpcConn := grpc2.Connect(config.RecommendRpcServiceName)
+	//recommendClient = recommend.NewRecommendServiceClient(recommendRpcConn)
 }
 
 func (a AuthServiceImpl) Authenticate(ctx context.Context, request *auth.AuthenticateRequest) (resp *auth.AuthenticateResponse, err error) {

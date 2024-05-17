@@ -46,7 +46,7 @@ func main() {
 		}
 	}()
 
-	// Configure Pyroscope
+	// Configure Pyroscope 用于服务器信息收集
 	profiling.InitPyroscope("GuGoTik.AuthService")
 	// 添加服务字段
 	log := logging.LogService(config.AuthRpcServerName)
@@ -65,7 +65,7 @@ func main() {
 	)
 
 	reg := prom.Client
-	// 吧监控指标注入到 prom的服务器
+	// 监控指标注入到 prom的服务器
 	reg.MustRegister(srvMetrics)
 	//创建一个目标误报率为 0.1% 的新 Bloom 过滤器
 	// Create a new Bloom filter with a target false positive rate of 0.1%
@@ -111,14 +111,16 @@ func main() {
 		grpc.ChainUnaryInterceptor(srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
 		grpc.ChainStreamInterceptor(srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
 	)
-	// 注册服务
+	// consul注册服务
 	if err := consul.RegisterConsul(config.AuthRpcServerName, config.AuthRpcServerPort); err != nil {
 		log.Panicf("Rpc %s register consul happens error for: %v", config.AuthRpcServerName, err)
 	}
 	log.Infof("Rpc %s is running at %s now", config.AuthRpcServerName, config.AuthRpcServerPort)
 
 	var srv AuthServiceImpl
+	// rpc服务进行在注册
 	auth.RegisterAuthServiceServer(s, srv)
+	// rpc health注册
 	grpc_health_v1.RegisterHealthServer(s, health.NewServer())
 
 	srv.New()

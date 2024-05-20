@@ -65,9 +65,6 @@ func (t logTraceHook) Fire(entry *log.Entry) error {
 	}
 
 	span := trace.SpanFromContext(ctx)
-	//if !span.IsRecording() {
-	//	return nil
-	//}
 
 	sCtx := span.SpanContext()
 	if sCtx.HasTraceID() {
@@ -113,6 +110,7 @@ func SetSpanErrorWithDesc(span trace.Span, err error, desc string) {
 	span.SetStatus(codes.Error, desc)
 }
 
+// 设置主机名称和IP地址
 func SetSpanWithHostname(span trace.Span) {
 	span.SetAttributes(attribute.String("hostname", hostname))
 	span.SetAttributes(attribute.String("podIP", config.EnvCfg.PodIpAddr))

@@ -19,11 +19,13 @@ var Client auth.AuthServiceClient
 
 func LoginHandle(c *gin.Context) {
 	var req models.LoginReq
+	// “star” 创建跨度和上下文。包含新创建的跨度的上下文。
 	_, span := tracing.Tracer.Start(c.Request.Context(), "LoginHandler")
+	// 	End 完成 Span。跨度被认为是完整的，可以了 在此方法之后，通过遥测管道的其余部分传递
 	defer span.End()
 	logging.SetSpanWithHostname(span)
 	logger := logging.LogService("GateWay.Login").WithContext(c.Request.Context())
-
+	// 参数校验
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusOK, models.LoginRes{
 			StatusCode: strings.GateWayParamsErrorCode,
@@ -33,7 +35,7 @@ func LoginHandle(c *gin.Context) {
 		})
 		return
 	}
-
+	// 客户端 进行登陆
 	res, err := Client.Login(c.Request.Context(), &auth.LoginRequest{
 		Username: req.UserName,
 		Password: req.Password,

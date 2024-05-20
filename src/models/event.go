@@ -1,5 +1,6 @@
 package models
 
+// 推荐事件
 type RecommendEvent struct {
 	Type     int    // 1. 已读 2. 喜欢 3. 插入新数据
 	Source   string // 来源

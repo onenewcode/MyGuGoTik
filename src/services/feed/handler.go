@@ -108,16 +108,16 @@ func produceFeed(ctx context.Context, event models.RecommendEvent) {
 	}
 
 	headers := rabbitmq.InjectAMQPHeaders(ctx)
-
+	// 消息发布
 	err = channel.PublishWithContext(ctx,
-		strings.EventExchange,
-		strings.VideoGetEvent,
-		false,
-		false,
+		strings.EventExchange, // 指定交换机
+		strings.VideoGetEvent, //  设置路由键
+		false,                 // 如果为true，则如果消息无法路由到任何队列
+		false,                 // 仅在rabbitmq的"immediate"（直连交换机类型）模式下有意义，这里设置为false，意味着不使用该特性
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "text/plain", // 指定消息体的内容类型为纯文本
 			Body:        data,
-			Headers:     headers,
+			Headers:     headers, // 自定义消息头，包含了之前通过rabbitmq.InjectAMQPHeaders函数注入的追踪上下文或其他额外的元数据。
 		})
 
 	if err != nil {
@@ -137,6 +137,7 @@ func (s FeedServiceImpl) ListVideosByRecommend(ctx context.Context, request *fee
 
 	now := time.Now().UnixMilli()
 	latestTime := now
+	// 检验日期参数是否合法
 	if request.LatestTime != nil && *request.LatestTime != "" && *request.LatestTime != "0" {
 		// Check if request.LatestTime is a timestamp
 		t, ok := isUnixMilliTimestamp(*request.LatestTime)
@@ -149,6 +150,7 @@ func (s FeedServiceImpl) ListVideosByRecommend(ctx context.Context, request *fee
 			logging.SetSpanError(span, errors.New("the latestTime is not a unit timestamp"))
 		}
 	}
+	// rpc远程调用
 	recommendResponse, err := RecommendClient.GetRecommendInformation(ctx, &recommend.RecommendRequest{
 		UserId: *request.ActorId,
 		Offset: -1,
@@ -168,9 +170,10 @@ func (s FeedServiceImpl) ListVideosByRecommend(ctx context.Context, request *fee
 		}
 		return resp, err
 	}
+
+	// 查找推荐视频
 	recommendVideoId := recommendResponse.VideoList
 	find, err := findRecommendVideos(ctx, recommendVideoId)
-
 	nextTimeStamp := uint64(latestTime)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
@@ -200,6 +203,7 @@ func (s FeedServiceImpl) ListVideosByRecommend(ctx context.Context, request *fee
 	if request.ActorId != nil {
 		actorId = *request.ActorId
 	}
+	// 具体视频查询
 	videos := queryDetailed(ctx, logger, actorId, find)
 	if videos == nil {
 		logger.WithFields(logrus.Fields{

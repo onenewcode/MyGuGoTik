@@ -56,10 +56,10 @@ func main() {
 	if err != nil {
 		log.Panicf("Rpc %s listen happens error: %v", config.AuthRpcServerName, err)
 	}
-	// 创建一个新的服务器监控指标收集器
+	// 创建一个新的rpc监控指标收集器
 	srvMetrics := grpcprom.NewServerMetrics(
+		// 每个bucket代表一个区间，用于累计落在该区间内的请求处理时间
 		grpcprom.WithServerHandlingTimeHistogram(
-			// 每个bucket代表一个区间，用于累计落在该区间内的请求处理时间
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
 		),
 	)
@@ -105,10 +105,10 @@ func main() {
 			BloomFilter.AddString(msg.Payload)
 		}
 	}()
-
+	// 新建一个rpc服务
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-		grpc.ChainUnaryInterceptor(srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
+		grpc.ChainUnaryInterceptor(srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))), //用于信息监控
 		grpc.ChainStreamInterceptor(srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(prom.ExtractContext))),
 	)
 	// consul注册服务
@@ -127,6 +127,7 @@ func main() {
 	srvMetrics.InitializeMetrics(s)
 	// 并发地管理和协调多个任务
 	g := &run.Group{}
+	// 启动rpc服务
 	g.Add(func() error {
 		return s.Serve(lis)
 	}, func(err error) {
@@ -134,7 +135,7 @@ func main() {
 		s.Stop()
 		log.Errorf("Rpc %s listen happens error for: %v", config.AuthRpcServerName, err)
 	})
-	// 创建HTTP服务器实例
+	// 创建HTTP服务器实例，该服务用于向pro提供检测指标
 	httpSrv := &http.Server{Addr: config.EnvCfg.PodIpAddr + config.Metrics}
 	g.Add(func() error {
 		m := http.NewServeMux()
@@ -152,7 +153,7 @@ func main() {
 			log.Errorf("Prometheus %s listen happens error for: %v", config.AuthRpcServerName, err)
 		}
 	})
-
+	//一个信号处理器，用于监听两种系统信号：SIGINT（通常由用户按下Ctrl+C触发，意在请求进程中断）和SIGTERM（一个典型的进程终止信号，通常由系统或管理员发出，要求进程正常退出）
 	g.Add(run.SignalHandler(context.Background(), syscall.SIGINT, syscall.SIGTERM))
 
 	if err := g.Run(); err != nil {

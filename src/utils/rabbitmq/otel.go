@@ -31,8 +31,11 @@ func (a AmqpHeadersCarrier) Keys() []string {
 	return r
 }
 
+// 初始化分布式追踪
+// 这个返回的字典可以直接用于AMQP消息的头部，从而在消息传递过程中传播追踪数据，使得消息在不同服务间流转时，依然能维持分布式追踪链路的连续性
 func InjectAMQPHeaders(ctx context.Context) map[string]interface{} {
 	h := make(AmqpHeadersCarrier)
+	//取全局的文本映射传播器,
 	otel.GetTextMapPropagator().Inject(ctx, h)
 	return h
 }

@@ -15,6 +15,7 @@ import (
 type FSStorage struct {
 }
 
+// 得到文件本地地址
 func (f FSStorage) GetLocalPath(ctx context.Context, fileName string) string {
 	_, span := tracing.Tracer.Start(ctx, "FSStorage-GetLocalPath")
 	defer span.End()
@@ -22,6 +23,7 @@ func (f FSStorage) GetLocalPath(ctx context.Context, fileName string) string {
 	return path.Join(config.EnvCfg.FileSystemStartPath, fileName)
 }
 
+// 上传文件
 func (f FSStorage) Upload(ctx context.Context, fileName string, content io.Reader) (output *PutObjectOutput, err error) {
 	ctx, span := tracing.Tracer.Start(ctx, "FSStorage-Upload")
 	defer span.End()

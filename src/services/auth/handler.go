@@ -43,7 +43,7 @@ type AuthServiceImpl struct {
 	auth.AuthServiceServer
 }
 
-// todo
+// todo,尝试连接其他rpc服务
 func (a AuthServiceImpl) New() {
 	//relationConn := grpc2.Connect(config.RelationRpcServerName)
 	//relationClient = relation.NewRelationServiceClient(relationConn)

@@ -53,6 +53,7 @@ func (a AuthServiceImpl) New() {
 	//recommendClient = recommend.NewRecommendServiceClient(recommendRpcConn)
 }
 
+// 用户鉴权
 func (a AuthServiceImpl) Authenticate(ctx context.Context, request *auth.AuthenticateRequest) (resp *auth.AuthenticateResponse, err error) {
 	ctx, span := tracing.Tracer.Start(ctx, "AuthenticateService")
 	defer span.End()
@@ -101,6 +102,7 @@ func (a AuthServiceImpl) Authenticate(ctx context.Context, request *auth.Authent
 	return
 }
 
+// 用户注册
 func (a AuthServiceImpl) Register(ctx context.Context, request *auth.RegisterRequest) (resp *auth.RegisterResponse, err error) {
 	ctx, span := tracing.Tracer.Start(ctx, "RegisterService")
 	defer span.End()
@@ -136,9 +138,10 @@ func (a AuthServiceImpl) Register(ctx context.Context, request *auth.RegisterReq
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	//Get Sign
+	//Get Sign，
 	go func() {
 		defer wg.Done()
+		// 接入一言网站
 		resp, err := http.Get("https://v1.hitokoto.cn/?c=b&encode=text")
 		_, span := tracing.Tracer.Start(ctx, "FetchSignature")
 		defer span.End()
@@ -257,6 +260,7 @@ func (a AuthServiceImpl) Register(ctx context.Context, request *auth.RegisterReq
 	return
 }
 
+// 用户登陆
 func (a AuthServiceImpl) Login(ctx context.Context, request *auth.LoginRequest) (resp *auth.LoginResponse, err error) {
 	ctx, span := tracing.Tracer.Start(ctx, "LoginService")
 	defer span.End()
@@ -265,7 +269,7 @@ func (a AuthServiceImpl) Login(ctx context.Context, request *auth.LoginRequest) 
 	logger.WithFields(logrus.Fields{
 		"username": request.Username,
 	}).Debugf("User try to log in.")
-
+	// 检查用户名是在否在过滤器中
 	// Check if a username might be in the filter
 	if !BloomFilter.TestString(request.Username) {
 		resp = &auth.LoginResponse{
@@ -293,7 +297,7 @@ func (a AuthServiceImpl) Login(ctx context.Context, request *auth.LoginRequest) 
 		logging.SetSpanError(span, err)
 		return
 	}
-
+	// 如果缓存查去不到，从数据库中查询
 	if !ok {
 		result := database.Client.Where("user_name = ?", request.Username).WithContext(ctx).Find(&user)
 		if result.Error != nil {
@@ -390,6 +394,7 @@ func (a AuthServiceImpl) Login(ctx context.Context, request *auth.LoginRequest) 
 	return
 }
 
+// 对密码进行hash加密
 func hashPassword(ctx context.Context, password string) (string, error) {
 	_, span := tracing.Tracer.Start(ctx, "PasswordHash")
 	defer span.End()

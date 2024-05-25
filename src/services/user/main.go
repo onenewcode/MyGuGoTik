@@ -117,6 +117,7 @@ func main() {
 }
 
 func createMagicUser() {
+	// 创建魔术用户：显示视频摘要和关键字，并充当 ChatGPT
 	// Create magic user: show video summary and keywords, and act as ChatGPT
 	magicUser := models.User{
 		UserName:        "ChatGPT",
@@ -126,9 +127,9 @@ func createMagicUser() {
 		BackgroundImage: "https://maples31-blog.oss-cn-beijing.aliyuncs.com/img/ChatGPT.jpg",
 		Signature:       "GuGoTik 小助手",
 	}
-	result := database.Client.Clauses(clause.OnConflict{
+	result := database.Client.Clauses(clause.OnConflict{ // 冲突处理的配置对象
 		Columns:   []clause.Column{{Name: "user_name"}},
-		DoUpdates: clause.AssignmentColumns([]string{"password", "role", "avatar", "background_image", "signature"}),
+		DoUpdates: clause.AssignmentColumns([]string{"password", "role", "avatar", "background_image", "signature"}), // 这意味着如果用户名已经存在，GORM将不会插入新记录，而是更新该用户名对应的记录中这些指定的字段
 	}).Create(&magicUser)
 
 	if result.Error != nil {

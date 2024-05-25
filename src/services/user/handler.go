@@ -94,6 +94,7 @@ func (a UserServiceImpl) GetUserInfo(ctx context.Context, request *user.UserRequ
 
 	go func() {
 		defer wg.Done()
+		// 获取关注数量
 		rResp, err := relationClient.CountFollowList(ctx, &relation.CountFollowListRequest{UserId: request.UserId})
 		if err != nil {
 			logger.WithFields(logrus.Fields{
@@ -120,6 +121,7 @@ func (a UserServiceImpl) GetUserInfo(ctx context.Context, request *user.UserRequ
 
 	go func() {
 		defer wg.Done()
+		// 获取关注者列表
 		rResp, err := relationClient.CountFollowerList(ctx, &relation.CountFollowerListRequest{UserId: request.UserId})
 		if err != nil {
 			logger.WithFields(logrus.Fields{
@@ -146,6 +148,7 @@ func (a UserServiceImpl) GetUserInfo(ctx context.Context, request *user.UserRequ
 
 	go func() {
 		defer wg.Done()
+		// 获取是否关注
 		rResp, err := relationClient.IsFollow(ctx, &relation.IsFollowRequest{
 			ActorId: request.ActorId,
 			UserId:  request.UserId,

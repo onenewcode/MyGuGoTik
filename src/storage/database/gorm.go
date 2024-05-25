@@ -38,7 +38,7 @@ func init() {
 			},
 		}
 	}
-
+	// 建立数据库连接
 	if Client, err = gorm.Open(
 		postgres.Open(
 			fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
@@ -68,7 +68,7 @@ func init() {
 					config.EnvCfg.PostgreSQLDataBase,
 					pair[1])))
 		}
-
+		// 使用读写分离
 		err := Client.Use(dbresolver.Register(dbresolver.Config{
 			Replicas: replicas,
 			Policy:   dbresolver.RandomPolicy{},
@@ -87,8 +87,13 @@ func init() {
 	sqlDB.SetMaxOpenConns(200)
 	sqlDB.SetConnMaxLifetime(24 * time.Hour)
 	sqlDB.SetConnMaxIdleTime(time.Hour)
-
+	// 注册追踪中间件
 	if err := Client.Use(tracing.NewPlugin()); err != nil {
 		panic(err)
 	}
+	// TODO 设置提交地址
+
+	//if err := Client.Use(tracing.NewPlugin(tracing.WithTracerProvider())); err != nil {
+	//	panic(err)
+	//}
 }

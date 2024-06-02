@@ -35,6 +35,7 @@ type PublishServiceImpl struct {
 
 var conn *amqp.Connection
 
+// amqp 管道
 var channel *amqp.Channel
 
 var FeedClient feed.FeedServiceClient
@@ -133,6 +134,7 @@ func (a PublishServiceImpl) New() {
 	exitOnError(err)
 }
 
+// 获取视频列表
 func (a PublishServiceImpl) ListVideo(ctx context.Context, req *publish.ListVideoRequest) (resp *publish.ListVideoResponse, err error) {
 	ctx, span := tracing.Tracer.Start(ctx, "ListVideoService")
 	defer span.End()
@@ -168,10 +170,10 @@ func (a PublishServiceImpl) ListVideo(ctx context.Context, req *publish.ListVide
 	}
 
 	var videos []models.Video
-	err = database.Client.WithContext(ctx).
-		Where("user_id = ?", req.UserId).
-		Order("created_at DESC").
-		Find(&videos).Error
+	err = database.Client.WithContext(ctx). // 携带上下文为了进行trace追踪
+						Where("user_id = ?", req.UserId).
+						Order("created_at DESC").
+						Find(&videos).Error
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"err": err,
@@ -188,7 +190,7 @@ func (a PublishServiceImpl) ListVideo(ctx context.Context, req *publish.ListVide
 		videoIds = append(videoIds, video.ID)
 	}
 
-	queryVideoResp, err := FeedClient.QueryVideos(ctx, &feed.QueryVideosRequest{
+	queryVideoResp, err := FeedClient.QueryVideos(ctx, &feed.QueryVideosRequest{ // 携带上下文为了进行trace追踪
 		ActorId:  req.ActorId,
 		VideoIds: videoIds,
 	})
